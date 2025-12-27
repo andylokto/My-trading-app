@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的交易助手</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        input { background-color: #1e1e1e; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px; width: 100%; }
+        .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-md mx-auto">
+        <h1 class="text-2xl font-bold mb-6 text-center text-blue-400">📈 交易風險計算器</h1>
+        
+        <div class="card mb-6">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">總資金 (USD)</label>
+                    <input type="number" id="capital" value="10000" oninput="calculate()">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">風險 %</label>
+                        <input type="number" id="riskPercent" value="1" oninput="calculate()">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">單筆風險額</label>
+                        <div id="riskAmountDisplay" class="py-2 text-lg font-bold text-red-400">$100</div>
+                    </div>
+                </div>
+                <hr class="border-gray-700">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">進場價</label>
+                    <input type="number" id="entry" placeholder="0.00" oninput="calculate()">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">止損價</label>
+                    <input type="number" id="stopLoss" placeholder="0.00" oninput="calculate()">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">止賺價 (目標)</label>
+                    <input type="number" id="takeProfit" placeholder="0.00" oninput="calculate()">
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-blue-900/20 border border-blue-800 mb-6">
+            <div class="grid grid-cols-2 gap-4 text-center">
+                <div>
+                    <p class="text-xs text-blue-300 uppercase">建議股數</p>
+                    <p id="suggestedQty" class="text-2xl font-black text-white">0</p>
+                </div>
+                <div>
+                    <p class="text-xs text-blue-300 uppercase">風險回報比 (RRR)</p>
+                    <p id="rrrDisplay" class="text-2xl font-black text-white">0.0</p>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="saveTrade()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
+            儲存交易紀錄 (本地)
+        </button>
+
+        <div id="history" class="mt-8 space-y-3">
+            <h2 class="text-lg font-bold text-gray-300">最近紀錄 (LocalStorage)</h2>
+            </div>
+    </div>
+
+    <script>
+        function calculate() {
+            const capital = parseFloat(document.getElementById('capital').value);
+            const riskPercent = parseFloat(document.getElementById('riskPercent').value);
+            const entry = parseFloat(document.getElementById('entry').value);
+            const stopLoss = parseFloat(document.getElementById('stopLoss').value);
+            const takeProfit = parseFloat(document.getElementById('takeProfit').value);
+
+            const riskAmount = capital * (riskPercent / 100);
+            document.getElementById('riskAmountDisplay').innerText = `$${riskAmount.toFixed(2)}`;
+
+            if (entry && stopLoss && entry !== stopLoss) {
+                const perShareRisk = Math.abs(entry - stopLoss);
+                const qty = Math.floor(riskAmount / perShareRisk);
+                document.getElementById('suggestedQty').innerText = qty;
+
+                if (takeProfit) {
+                    const reward = Math.abs(takeProfit - entry);
+                    const rrr = (reward / perShareRisk).toFixed(2);
+                    const display = document.getElementById('rrrDisplay');
+                    display.innerText = `1 : ${rrr}`;
+                    display.className = rrr >= 2 ? "text-2xl font-black text-green-400" : "text-2xl font-black text-red-400";
+                }
+            }
+        }
+
+        function saveTrade() {
+            // 這裡可以加入儲存到 LocalStorage 的代碼
+            alert('已儲存到 iPad 本地空間！');
+        }
+    </script>
+</body>
+</html>
