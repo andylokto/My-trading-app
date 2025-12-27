@@ -3,144 +3,183 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我的交易助手</title>
+    <title>我的交易助手 Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #121212; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        input { background-color: #1e1e1e; border: 1px solid #333; color: white; border-radius: 8px; padding: 10px; width: 100%; }
-        .card { background-color: #1e1e1e; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        /* 針對 iPad 優化字體與間距 */
+        body { background-color: #121212; -webkit-tap-highlight-color: transparent; }
+        input:focus { outline: 2px solid #3b82f6; border-color: transparent; }
     </style>
 </head>
-<body class="p-4 md:p-8">
-    <div class="max-w-md mx-auto">
-        <h1 class="text-2xl font-bold mb-6 text-center text-blue-400">📈 交易風險計算器</h1>
-        
-        <div class="card mb-6">
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">總資金 (USD)</label>
-                    <input type="number" id="capital" value="10000" oninput="calculate()">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
+<body class="text-gray-200 p-4 md:p-10">
+    <div class="max-w-2xl mx-auto">
+        <header class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-black text-blue-500 tracking-tight">TRADE<span class="text-white">LOG</span></h1>
+            <button onclick="exportToCSV()" class="bg-gray-800 hover:bg-gray-700 text-xs px-4 py-2 rounded-full border border-gray-600 transition">
+                📤 匯出備份 (CSV)
+            </button>
+        </header>
+
+        <section class="bg-[#1e1e1e] p-6 rounded-3xl shadow-2xl mb-8 border border-gray-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="space-y-4">
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1">風險 %</label>
-                        <input type="number" id="riskPercent" value="1" oninput="calculate()">
+                        <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">股票代碼</label>
+                        <input type="text" id="symbol" placeholder="例如: NVDA" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold uppercase">
                     </div>
                     <div>
-                        <label class="block text-sm text-gray-400 mb-1">單筆風險額</label>
-                        <div id="riskAmountDisplay" class="py-2 text-lg font-bold text-red-400">$100</div>
+                        <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">帳戶總資金 (USD)</label>
+                        <input type="number" id="capital" value="10000" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold">
                     </div>
                 </div>
-                <hr class="border-gray-700">
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">進場價</label>
-                    <input type="number" id="entry" placeholder="0.00" oninput="calculate()">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">止損價</label>
-                    <input type="number" id="stopLoss" placeholder="0.00" oninput="calculate()">
-                </div>
-                <div>
-                    <label class="block text-sm text-gray-400 mb-1">止賺價 (目標)</label>
-                    <input type="number" id="takeProfit" placeholder="0.00" oninput="calculate()">
-                </div>
-            </div>
-        </div>
-
-        <div class="card bg-blue-900/20 border border-blue-800 mb-6">
-            <div class="grid grid-cols-2 gap-4 text-center">
-                <div>
-                    <p class="text-xs text-blue-300 uppercase">建議股數</p>
-                    <p id="suggestedQty" class="text-2xl font-black text-white">0</p>
-                </div>
-                <div>
-                    <p class="text-xs text-blue-300 uppercase">風險回報比 (RRR)</p>
-                    <p id="rrrDisplay" class="text-2xl font-black text-white">0.0</p>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">風險 %</label>
+                            <input type="number" id="riskPercent" value="1" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">風險金額</label>
+                            <div id="riskAmountDisplay" class="p-4 text-xl font-bold text-red-400">$100.00</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">進場價</label>
+                            <input type="number" id="entry" placeholder="0.00" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">止損價</label>
+                            <input type="number" id="stopLoss" placeholder="0.00" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold text-red-400">
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <button onclick="saveTrade()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition">
-            儲存交易紀錄 (本地)
-        </button>
-
-        <div id="history" class="mt-8 space-y-3">
-            <h2 class="text-lg font-bold text-gray-300">最近紀錄 (LocalStorage)</h2>
+            <div class="bg-blue-600/10 border border-blue-500/30 p-6 rounded-2xl flex justify-between items-center mb-6">
+                <div>
+                    <p class="text-xs text-blue-400 font-bold uppercase tracking-wider">建議買入股數</p>
+                    <p id="suggestedQty" class="text-4xl font-black">0</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-blue-400 font-bold uppercase tracking-wider">盈虧比 (RRR)</p>
+                    <input type="number" id="takeProfit" placeholder="止賺價" oninput="calculate()" class="bg-transparent text-right text-2xl font-bold focus:outline-none w-32 border-b border-blue-500/50">
+                    <p id="rrrDisplay" class="text-lg font-bold mt-1">1 : 0.0</p>
+                </div>
             </div>
+
+            <button onclick="saveTrade()" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black py-5 rounded-2xl text-xl shadow-lg transition-all">
+                📥 儲存交易計畫
+            </button>
+        </section>
+
+        <section>
+            <div class="flex justify-between items-end mb-4 px-2">
+                <h2 class="text-xl font-bold">最近日誌</h2>
+                <input type="text" id="search" placeholder="🔍 搜尋代碼..." oninput="displayHistory()" class="bg-transparent border-b border-gray-700 pb-1 text-sm focus:outline-none focus:border-blue-500">
+            </div>
+            <div id="historyList" class="space-y-4">
+                </div>
+        </section>
     </div>
 
     <script>
-       // 初始化：頁面載入時讀取本地紀錄
-window.onload = function() {
-    displayHistory();
-};
+        function calculate() {
+            const capital = parseFloat(document.getElementById('capital').value) || 0;
+            const riskP = parseFloat(document.getElementById('riskPercent').value) || 0;
+            const entry = parseFloat(document.getElementById('entry').value) || 0;
+            const sl = parseFloat(document.getElementById('stopLoss').value) || 0;
+            const tp = parseFloat(document.getElementById('takeProfit').value) || 0;
 
-function calculate() {
-    const capital = parseFloat(document.getElementById('capital').value) || 0;
-    const riskPercent = parseFloat(document.getElementById('riskPercent').value) || 0;
-    const entry = parseFloat(document.getElementById('entry').value) || 0;
-    const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 0;
-    const takeProfit = parseFloat(document.getElementById('takeProfit').value) || 0;
+            const riskAmt = capital * (riskP / 100);
+            document.getElementById('riskAmountDisplay').innerText = `$${riskAmt.toFixed(2)}`;
 
-    const riskAmount = capital * (riskPercent / 100);
-    document.getElementById('riskAmountDisplay').innerText = `$${riskAmount.toFixed(2)}`;
+            if (entry && sl && entry !== sl) {
+                const perRisk = Math.abs(entry - sl);
+                const qty = Math.floor(riskAmt / perRisk);
+                document.getElementById('suggestedQty').innerText = qty;
 
-    if (entry && stopLoss && entry !== stopLoss) {
-        const perShareRisk = Math.abs(entry - stopLoss);
-        const qty = Math.floor(riskAmount / perShareRisk);
-        document.getElementById('suggestedQty').innerText = qty;
-
-        if (takeProfit) {
-            const reward = Math.abs(takeProfit - entry);
-            const rrr = (reward / perShareRisk).toFixed(2);
-            const display = document.getElementById('rrrDisplay');
-            display.innerText = `1 : ${rrr}`;
-            // RRR 高於 2 顯示綠色，否則紅色
-            display.style.color = rrr >= 2 ? "#4ade80" : "#f87171";
+                if (tp) {
+                    const rrr = (Math.abs(tp - entry) / perRisk).toFixed(2);
+                    const rrrDiv = document.getElementById('rrrDisplay');
+                    rrrDiv.innerText = `1 : ${rrr}`;
+                    rrrDiv.className = rrr >= 2 ? "text-lg font-bold mt-1 text-green-400" : "text-lg font-bold mt-1 text-red-400";
+                }
+            }
         }
-    }
-}
 
-function saveTrade() {
-    const trade = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString(),
-        entry: document.getElementById('entry').value,
-        stopLoss: document.getElementById('stopLoss').value,
-        rrr: document.getElementById('rrrDisplay').innerText,
-        qty: document.getElementById('suggestedQty').innerText
-    };
+        function saveTrade() {
+            const sym = document.getElementById('symbol').value.toUpperCase();
+            const entry = document.getElementById('entry').value;
+            const sl = document.getElementById('stopLoss').value;
 
-    // 從 LocalStorage 讀取舊紀錄，若無則建新陣列
-    let history = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
-    history.unshift(trade); // 加入到最前面
-    localStorage.setItem('tradeHistory', JSON.stringify(history));
+            if(!sym || !entry || !sl) return alert("代碼、進場價、止損價為必填！");
 
-    displayHistory();
-    alert('紀錄已成功存入 iPad！');
-}
+            const trade = {
+                id: Date.now(),
+                sym, entry, sl,
+                tp: document.getElementById('takeProfit').value || '-',
+                rrr: document.getElementById('rrrDisplay').innerText,
+                qty: document.getElementById('suggestedQty').innerText,
+                date: new Date().toLocaleDateString()
+            };
 
-function displayHistory() {
-    const history = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
-    const container = document.getElementById('history');
-    container.innerHTML = '<h2 class="text-lg font-bold text-gray-300">最近紀錄</h2>';
+            let logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
+            logs.unshift(trade);
+            localStorage.setItem('tradeLogs', JSON.stringify(logs));
+            
+            displayHistory();
+            ['symbol','entry','stopLoss','takeProfit'].forEach(id => document.getElementById(id).value = '');
+        }
 
-    history.forEach(item => {
-        const div = document.createElement('div');
-        div.className = "card mb-2 text-sm flex justify-between items-center border-l-4 border-blue-500";
-        div.innerHTML = `
-            <div>
-                <p class="font-bold">${item.date} - 建議買入 ${item.qty} 股</p>
-                <p class="text-gray-400">進場: ${item.entry} | 止損: ${item.stopLoss}</p>
-            </div>
-            <div class="text-right">
-                <p class="text-blue-400 font-bold">${item.rrr}</p>
-            </div>
-        `;
-        container.appendChild(div);
-    });
-}
+        function displayHistory() {
+            const logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
+            const search = document.getElementById('search').value.toUpperCase();
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
 
+            logs.filter(l => l.sym.includes(search)).forEach(l => {
+                list.innerHTML += `
+                    <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-gray-800 flex justify-between items-center shadow-md">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-blue-600 text-[10px] px-2 py-0.5 rounded font-bold">${l.date}</span>
+                                <span class="text-xl font-black text-white">${l.sym}</span>
+                            </div>
+                            <p class="text-sm text-gray-400 font-medium">進場: ${l.entry} | 止損: ${l.sl} | 股數: ${l.qty}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xl font-black ${parseFloat(l.rrr.split(':')[1]) >= 2 ? 'text-green-400' : 'text-gray-400'}">${l.rrr}</p>
+                            <button onclick="deleteLog(${l.id})" class="text-xs text-red-900 mt-1 font-bold">移除</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function deleteLog(id) {
+            if(!confirm("確定刪除？")) return;
+            let logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
+            localStorage.setItem('tradeLogs', JSON.stringify(logs.filter(l => l.id !== id)));
+            displayHistory();
+        }
+
+        function exportToCSV() {
+            const logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
+            if(logs.length === 0) return alert("目前沒有紀錄可匯出");
+
+            let csv = "日期,代碼,進場價,止損價,止賺價,建議股數,RRR\n";
+            logs.forEach(l => {
+                csv += `${l.date},${l.sym},${l.entry},${l.sl},${l.tp},${l.qty},${l.rrr}\n`;
+            });
+
+            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `交易紀錄備份_${new Date().toLocaleDateString()}.csv`;
+            link.click();
+        }
+
+        window.onload = displayHistory;
     </script>
 </body>
 </html>
