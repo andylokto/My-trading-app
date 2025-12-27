@@ -70,35 +70,77 @@
     </div>
 
     <script>
-        function calculate() {
-            const capital = parseFloat(document.getElementById('capital').value);
-            const riskPercent = parseFloat(document.getElementById('riskPercent').value);
-            const entry = parseFloat(document.getElementById('entry').value);
-            const stopLoss = parseFloat(document.getElementById('stopLoss').value);
-            const takeProfit = parseFloat(document.getElementById('takeProfit').value);
+       // 初始化：頁面載入時讀取本地紀錄
+window.onload = function() {
+    displayHistory();
+};
 
-            const riskAmount = capital * (riskPercent / 100);
-            document.getElementById('riskAmountDisplay').innerText = `$${riskAmount.toFixed(2)}`;
+function calculate() {
+    const capital = parseFloat(document.getElementById('capital').value) || 0;
+    const riskPercent = parseFloat(document.getElementById('riskPercent').value) || 0;
+    const entry = parseFloat(document.getElementById('entry').value) || 0;
+    const stopLoss = parseFloat(document.getElementById('stopLoss').value) || 0;
+    const takeProfit = parseFloat(document.getElementById('takeProfit').value) || 0;
 
-            if (entry && stopLoss && entry !== stopLoss) {
-                const perShareRisk = Math.abs(entry - stopLoss);
-                const qty = Math.floor(riskAmount / perShareRisk);
-                document.getElementById('suggestedQty').innerText = qty;
+    const riskAmount = capital * (riskPercent / 100);
+    document.getElementById('riskAmountDisplay').innerText = `$${riskAmount.toFixed(2)}`;
 
-                if (takeProfit) {
-                    const reward = Math.abs(takeProfit - entry);
-                    const rrr = (reward / perShareRisk).toFixed(2);
-                    const display = document.getElementById('rrrDisplay');
-                    display.innerText = `1 : ${rrr}`;
-                    display.className = rrr >= 2 ? "text-2xl font-black text-green-400" : "text-2xl font-black text-red-400";
-                }
-            }
+    if (entry && stopLoss && entry !== stopLoss) {
+        const perShareRisk = Math.abs(entry - stopLoss);
+        const qty = Math.floor(riskAmount / perShareRisk);
+        document.getElementById('suggestedQty').innerText = qty;
+
+        if (takeProfit) {
+            const reward = Math.abs(takeProfit - entry);
+            const rrr = (reward / perShareRisk).toFixed(2);
+            const display = document.getElementById('rrrDisplay');
+            display.innerText = `1 : ${rrr}`;
+            // RRR 高於 2 顯示綠色，否則紅色
+            display.style.color = rrr >= 2 ? "#4ade80" : "#f87171";
         }
+    }
+}
 
-        function saveTrade() {
-            // 這裡可以加入儲存到 LocalStorage 的代碼
-            alert('已儲存到 iPad 本地空間！');
-        }
+function saveTrade() {
+    const trade = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString(),
+        entry: document.getElementById('entry').value,
+        stopLoss: document.getElementById('stopLoss').value,
+        rrr: document.getElementById('rrrDisplay').innerText,
+        qty: document.getElementById('suggestedQty').innerText
+    };
+
+    // 從 LocalStorage 讀取舊紀錄，若無則建新陣列
+    let history = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
+    history.unshift(trade); // 加入到最前面
+    localStorage.setItem('tradeHistory', JSON.stringify(history));
+
+    displayHistory();
+    alert('紀錄已成功存入 iPad！');
+}
+
+function displayHistory() {
+    const history = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
+    const container = document.getElementById('history');
+    container.innerHTML = '<h2 class="text-lg font-bold text-gray-300">最近紀錄</h2>';
+
+    history.forEach(item => {
+        const div = document.createElement('div');
+        div.className = "card mb-2 text-sm flex justify-between items-center border-l-4 border-blue-500";
+        div.innerHTML = `
+            <div>
+                <p class="font-bold">${item.date} - 建議買入 ${item.qty} 股</p>
+                <p class="text-gray-400">進場: ${item.entry} | 止損: ${item.stopLoss}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-blue-400 font-bold">${item.rrr}</p>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
     </script>
 </body>
 </html>
