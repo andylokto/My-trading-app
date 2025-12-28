@@ -3,183 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>我的交易助手 Pro</title>
+    <title>MIM DRIVE & VCP 系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 針對 iPad 優化字體與間距 */
-        body { background-color: #121212; -webkit-tap-highlight-color: transparent; }
-        input:focus { outline: 2px solid #3b82f6; border-color: transparent; }
+        body { background-color: #0f172a; color: #f1f5f9; font-family: -apple-system, sans-serif; }
+        .drive-checkbox:checked + label { background-color: #3b82f6; border-color: #3b82f6; color: white; font-weight: bold; }
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
 </head>
-<body class="text-gray-200 p-4 md:p-10">
+<body class="p-4 md:p-8">
     <div class="max-w-2xl mx-auto">
-        <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-black text-blue-500 tracking-tight">TRADE<span class="text-white">LOG</span></h1>
-            <button onclick="exportToCSV()" class="bg-gray-800 hover:bg-gray-700 text-xs px-4 py-2 rounded-full border border-gray-600 transition">
-                📤 匯出備份 (CSV)
-            </button>
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-black text-blue-500 italic uppercase">MIM Drive <span class="text-white">V2</span></h1>
+            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
+                <span class="text-[9px] text-gray-400 block uppercase font-bold text-center mb-1">Exposure Level</span>
+                <select id="exposureLevel" onchange="calculate()" class="bg-slate-900 text-xs p-1 rounded font-bold text-blue-400">
+                    <option value="0.5">新手 0.5%</option>
+                    <option value="1.0" selected>標準 1.0%</option>
+                    <option value="2.0">進取 2.0%</option>
+                    <option value="2.5">極限 2.5%</option>
+                </select>
+            </div>
         </header>
 
-        <section class="bg-[#1e1e1e] p-6 rounded-3xl shadow-2xl mb-8 border border-gray-800">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">股票代碼</label>
-                        <input type="text" id="symbol" placeholder="例如: NVDA" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold uppercase">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">帳戶總資金 (USD)</label>
-                        <input type="number" id="capital" value="10000" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold">
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">風險 %</label>
-                            <input type="number" id="riskPercent" value="1" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">風險金額</label>
-                            <div id="riskAmountDisplay" class="p-4 text-xl font-bold text-red-400">$100.00</div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">進場價</label>
-                            <input type="number" id="entry" placeholder="0.00" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-500 uppercase ml-1">止損價</label>
-                            <input type="number" id="stopLoss" placeholder="0.00" oninput="calculate()" class="w-full bg-[#2a2a2a] p-4 rounded-2xl border border-gray-700 text-xl font-bold text-red-400">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-blue-600/10 border border-blue-500/30 p-6 rounded-2xl flex justify-between items-center mb-6">
+        <section class="bg-slate-800/50 p-5 rounded-3xl mb-6 border border-slate-700">
+            <p class="text-[10px] font-bold text-blue-400 mb-3 uppercase tracking-widest">VCP 形態診斷 (由左至右收縮 %)</p>
+            <div class="grid grid-cols-4 gap-3">
                 <div>
-                    <p class="text-xs text-blue-400 font-bold uppercase tracking-wider">建議買入股數</p>
-                    <p id="suggestedQty" class="text-4xl font-black">0</p>
+                    <input type="number" id="vcp1" placeholder="1st %" oninput="checkVCP()" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-center font-bold">
                 </div>
-                <div class="text-right">
-                    <p class="text-xs text-blue-400 font-bold uppercase tracking-wider">盈虧比 (RRR)</p>
-                    <input type="number" id="takeProfit" placeholder="止賺價" oninput="calculate()" class="bg-transparent text-right text-2xl font-bold focus:outline-none w-32 border-b border-blue-500/50">
-                    <p id="rrrDisplay" class="text-lg font-bold mt-1">1 : 0.0</p>
+                <div>
+                    <input type="number" id="vcp2" placeholder="2nd %" oninput="checkVCP()" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-center font-bold">
+                </div>
+                <div>
+                    <input type="number" id="vcp3" placeholder="3rd %" oninput="checkVCP()" class="w-full bg-slate-900 p-3 rounded-xl border border-slate-700 text-center font-bold">
+                </div>
+                <div class="flex items-center justify-center">
+                    <span id="vcpStatus" class="text-[10px] font-black px-2 py-1 rounded bg-slate-700 text-gray-500 italic">WAITING</span>
                 </div>
             </div>
-
-            <button onclick="saveTrade()" class="w-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-black py-5 rounded-2xl text-xl shadow-lg transition-all">
-                📥 儲存交易計畫
-            </button>
+            <p id="vcpHint" class="text-[10px] text-gray-500 mt-3 italic text-center">請輸入收縮百分比，系統將判斷是否符合收窄準則。</p>
         </section>
 
-        <section>
-            <div class="flex justify-between items-end mb-4 px-2">
-                <h2 class="text-xl font-bold">最近日誌</h2>
-                <input type="text" id="search" placeholder="🔍 搜尋代碼..." oninput="displayHistory()" class="bg-transparent border-b border-gray-700 pb-1 text-sm focus:outline-none focus:border-blue-500">
+        <section class="bg-slate-800/50 p-4 rounded-2xl mb-6 border border-slate-700">
+            <div class="grid grid-cols-5 gap-2">
+                <div class="relative"><input type="checkbox" id="d" class="drive-checkbox hidden"><label for="d" class="block text-center p-3 rounded-xl border border-slate-600 text-xs cursor-pointer transition">D</label></div>
+                <div class="relative"><input type="checkbox" id="r" class="drive-checkbox hidden"><label for="r" class="block text-center p-3 rounded-xl border border-slate-600 text-xs cursor-pointer transition">R</label></div>
+                <div class="relative"><input type="checkbox" id="i" class="drive-checkbox hidden"><label for="i" class="block text-center p-3 rounded-xl border border-slate-600 text-xs cursor-pointer transition">I</label></div>
+                <div class="relative"><input type="checkbox" id="v" class="drive-checkbox hidden"><label for="v" class="block text-center p-3 rounded-xl border border-slate-600 text-xs cursor-pointer transition">V</label></div>
+                <div class="relative"><input type="checkbox" id="e" class="drive-checkbox hidden"><label for="e" class="block text-center p-3 rounded-xl border border-slate-600 text-xs cursor-pointer transition">E</label></div>
             </div>
-            <div id="historyList" class="space-y-4">
-                </div>
         </section>
+
+        <section class="bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-xl mb-6">
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <input type="text" id="symbol" placeholder="股票代碼" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 font-black uppercase text-xl text-blue-400">
+                <input type="number" id="capital" value="10000" oninput="calculate()" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 font-bold text-xl">
+            </div>
+            <div class="grid grid-cols-3 gap-3 mb-6">
+                <input type="number" id="entry" placeholder="買入價" oninput="calculate()" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-sm">
+                <input type="number" id="sl" placeholder="止損價" oninput="calculate()" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-sm text-red-400 font-bold">
+                <input type="number" id="tp" placeholder="目標價" oninput="calculate()" class="bg-slate-800 p-4 rounded-2xl border border-slate-700 text-sm text-green-400 font-bold">
+            </div>
+
+            <div class="bg-blue-600/10 p-5 rounded-3xl flex justify-between items-center border border-blue-500/20 mb-4">
+                <div class="text-center flex-1">
+                    <p class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">建議股數</p>
+                    <p id="qty" class="text-4xl font-black">0</p>
+                </div>
+                <div class="w-px h-10 bg-slate-700 mx-4"></div>
+                <div class="text-center flex-1">
+                    <p class="text-[9px] text-blue-400 font-bold uppercase tracking-widest">預期 RRR</p>
+                    <p id="rrr" class="text-3xl font-black">1 : 0.0</p>
+                </div>
+            </div>
+            
+            <button onclick="saveTrade()" class="w-full bg-blue-600 hover:bg-blue-500 py-5 rounded-2xl font-black text-xl shadow-lg active:scale-95 transition-all">儲存 DRIVE 交易計畫</button>
+        </section>
+
+        <div id="logs" class="space-y-3"></div>
     </div>
 
     <script>
+        function checkVCP() {
+            const v1 = parseFloat(document.getElementById('vcp1').value) || 0;
+            const v2 = parseFloat(document.getElementById('vcp2').value) || 0;
+            const v3 = parseFloat(document.getElementById('vcp3').value) || 0;
+            const status = document.getElementById('vcpStatus');
+            const hint = document.getElementById('vcpHint');
+
+            if (v1 > 0 && v2 > 0) {
+                if (v2 < v1 && (v3 === 0 || v3 < v2)) {
+                    status.innerText = "VALID VCP";
+                    status.className = "text-[10px] font-black px-2 py-1 rounded bg-green-500 text-white";
+                    hint.innerText = "符合收縮準則：波動正在由左至右收窄。";
+                    document.getElementById('v').checked = true; // 自動勾選 DRIVE 中的 V
+                } else {
+                    status.innerText = "INVALID";
+                    status.className = "text-[10px] font-black px-2 py-1 rounded bg-red-500 text-white";
+                    hint.innerText = "警告：波動未有效收窄，可能不符合 VCP 形態。";
+                    document.getElementById('v').checked = false;
+                }
+            }
+        }
+
         function calculate() {
-            const capital = parseFloat(document.getElementById('capital').value) || 0;
-            const riskP = parseFloat(document.getElementById('riskPercent').value) || 0;
+            const cap = parseFloat(document.getElementById('capital').value) || 0;
+            const riskP = parseFloat(document.getElementById('exposureLevel').value);
             const entry = parseFloat(document.getElementById('entry').value) || 0;
-            const sl = parseFloat(document.getElementById('stopLoss').value) || 0;
-            const tp = parseFloat(document.getElementById('takeProfit').value) || 0;
+            const sl = parseFloat(document.getElementById('sl').value) || 0;
+            const tp = parseFloat(document.getElementById('tp').value) || 0;
 
-            const riskAmt = capital * (riskP / 100);
-            document.getElementById('riskAmountDisplay').innerText = `$${riskAmt.toFixed(2)}`;
-
+            const riskAmt = cap * (riskP / 100);
+            
             if (entry && sl && entry !== sl) {
                 const perRisk = Math.abs(entry - sl);
                 const qty = Math.floor(riskAmt / perRisk);
-                document.getElementById('suggestedQty').innerText = qty;
+                document.getElementById('qty').innerText = qty;
 
                 if (tp) {
-                    const rrr = (Math.abs(tp - entry) / perRisk).toFixed(2);
-                    const rrrDiv = document.getElementById('rrrDisplay');
-                    rrrDiv.innerText = `1 : ${rrr}`;
-                    rrrDiv.className = rrr >= 2 ? "text-lg font-bold mt-1 text-green-400" : "text-lg font-bold mt-1 text-red-400";
+                    const rValue = (Math.abs(tp - entry) / perRisk).toFixed(2);
+                    const rDisplay = document.getElementById('rrr');
+                    rDisplay.innerText = `1 : ${rValue}`;
+                    rDisplay.style.color = rValue >= 2.5 ? "#4ade80" : "#f87171";
                 }
             }
         }
 
         function saveTrade() {
             const sym = document.getElementById('symbol').value.toUpperCase();
-            const entry = document.getElementById('entry').value;
-            const sl = document.getElementById('stopLoss').value;
+            if(!sym) return alert("請輸入股票代碼");
 
-            if(!sym || !entry || !sl) return alert("代碼、進場價、止損價為必填！");
-
+            const driveScore = ['d','r','i','v','e'].filter(id => document.getElementById(id).checked).length;
             const trade = {
                 id: Date.now(),
-                sym, entry, sl,
-                tp: document.getElementById('takeProfit').value || '-',
-                rrr: document.getElementById('rrrDisplay').innerText,
-                qty: document.getElementById('suggestedQty').innerText,
+                sym,
+                rrr: document.getElementById('rrr').innerText,
+                qty: document.getElementById('qty').innerText,
+                score: driveScore,
+                vcp: `${document.getElementById('vcp1').value}%-${document.getElementById('vcp2').value}%`,
                 date: new Date().toLocaleDateString()
             };
 
-            let logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
+            let logs = JSON.parse(localStorage.getItem('mim_logs_v2') || '[]');
             logs.unshift(trade);
-            localStorage.setItem('tradeLogs', JSON.stringify(logs));
-            
-            displayHistory();
-            ['symbol','entry','stopLoss','takeProfit'].forEach(id => document.getElementById(id).value = '');
+            localStorage.setItem('mim_logs_v2', JSON.stringify(logs));
+            display();
         }
 
-        function displayHistory() {
-            const logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
-            const search = document.getElementById('search').value.toUpperCase();
-            const list = document.getElementById('historyList');
-            list.innerHTML = '';
-
-            logs.filter(l => l.sym.includes(search)).forEach(l => {
+        function display() {
+            const logs = JSON.parse(localStorage.getItem('mim_logs_v2') || '[]');
+            const list = document.getElementById('logs');
+            list.innerHTML = '<h2 class="text-xs font-bold text-gray-500 mb-4 uppercase tracking-widest">最近交易日誌</h2>';
+            
+            logs.forEach(l => {
                 list.innerHTML += `
-                    <div class="bg-[#1e1e1e] p-5 rounded-2xl border border-gray-800 flex justify-between items-center shadow-md">
+                    <div class="bg-slate-800/80 p-5 rounded-3xl border border-slate-700 flex justify-between items-center mb-4">
                         <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="bg-blue-600 text-[10px] px-2 py-0.5 rounded font-bold">${l.date}</span>
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-[9px] bg-blue-600 px-2 py-0.5 rounded font-black">${l.date}</span>
                                 <span class="text-xl font-black text-white">${l.sym}</span>
                             </div>
-                            <p class="text-sm text-gray-400 font-medium">進場: ${l.entry} | 止損: ${l.sl} | 股數: ${l.qty}</p>
+                            <p class="text-xs text-gray-400 font-bold">DRIVE: ${l.score}/5 | 股數: ${l.qty}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-xl font-black ${parseFloat(l.rrr.split(':')[1]) >= 2 ? 'text-green-400' : 'text-gray-400'}">${l.rrr}</p>
-                            <button onclick="deleteLog(${l.id})" class="text-xs text-red-900 mt-1 font-bold">移除</button>
+                            <p class="text-2xl font-black ${parseFloat(l.rrr.split(':')[1]) >= 2.5 ? 'text-green-400' : 'text-gray-400'}">${l.rrr}</p>
+                            <button onclick="deleteLog(${l.id})" class="text-[9px] text-red-500 font-bold mt-1 uppercase">Delete</button>
                         </div>
                     </div>`;
             });
         }
 
         function deleteLog(id) {
-            if(!confirm("確定刪除？")) return;
-            let logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
-            localStorage.setItem('tradeLogs', JSON.stringify(logs.filter(l => l.id !== id)));
-            displayHistory();
+            if(!confirm("確定刪除此計畫？")) return;
+            let logs = JSON.parse(localStorage.getItem('mim_logs_v2') || '[]');
+            localStorage.setItem('mim_logs_v2', JSON.stringify(logs.filter(l => l.id !== id)));
+            display();
         }
 
-        function exportToCSV() {
-            const logs = JSON.parse(localStorage.getItem('tradeLogs') || '[]');
-            if(logs.length === 0) return alert("目前沒有紀錄可匯出");
-
-            let csv = "日期,代碼,進場價,止損價,止賺價,建議股數,RRR\n";
-            logs.forEach(l => {
-                csv += `${l.date},${l.sym},${l.entry},${l.sl},${l.tp},${l.qty},${l.rrr}\n`;
-            });
-
-            const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `交易紀錄備份_${new Date().toLocaleDateString()}.csv`;
-            link.click();
-        }
-
-        window.onload = displayHistory;
+        window.onload = display;
     </script>
 </body>
 </html>
